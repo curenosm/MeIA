@@ -31,16 +31,16 @@ def load_data(data_file):
     -------
     data: array_like
     """
-    print("Loading data from %s" % (data_file))
+    print(f"Loading data from {data_file}")
 
     dataMat = scipy.io.loadmat(data_file, mat_dtype=True)
     all_data = np.array(dataMat['features'])
-    
+
     data = np.array(all_data[:,:len(all_data[0])-1])
     labels = np.array(all_data[:,len(all_data[0])-1])
-    
+
     print("Data loading complete. Shape is %r" % (dataMat['features'].shape,))
-    
+
     return data, labels.T - 1   # Sequential indices
 
 
@@ -278,36 +278,34 @@ def get_subject_indices_kfcv(id_subjects):
     
 
 def load_bashivan_data(data_dir, n_channels = 64, n_windows=7, n_bands=3, generate_images=False, size_image=32, visualize=False):
-    
+
     """
         Module used to load dataset of bashivan et al. 2014.
     """
     
     # load data pbashivan
-    data, labels = load_data(data_dir + "FeatureMat_timeWin.mat")
+    data, labels = load_data(f"{data_dir}FeatureMat_timeWin.mat")
     print("Original data:",data.shape, labels.shape)
-        
+
     if generate_images:
         
         # NOTE: Only a 3D projection is proporcionated, then it is not avaliable other
         # records with positions.
-        
+
         #Load locations in 3D
-        locs_orig = scipy.io.loadmat(data_dir+'Neuroscan_locs_orig.mat', mat_dtype=True)
+        locs_orig = scipy.io.loadmat(
+            f'{data_dir}Neuroscan_locs_orig.mat', mat_dtype=True
+        )
         locs3D = locs_orig['A']
-        
-        #Convert to 2D
-        locs2D =[]
-        for e in locs3D:
-            locs2D.append(azim_proj(e))
-        
+
+        locs2D = [azim_proj(e) for e in locs3D]
         #save in numpy array
         locs2D = np.array(locs2D)
-        
+
         # visualize projection
         if visualize:
             print("No. channels:",locs3D.shape)
-            
+
             # Plot in 3D
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
@@ -316,7 +314,7 @@ def load_bashivan_data(data_dir, n_channels = 64, n_windows=7, n_bands=3, genera
             ax.set_xlabel('X Label')
             ax.set_ylabel('Y Label')
             ax.set_zlabel('Z Label')
-            
+
             # Plot in 2D
             fig = plt.figure()
             ax = fig.add_subplot(111)
@@ -325,7 +323,7 @@ def load_bashivan_data(data_dir, n_channels = 64, n_windows=7, n_bands=3, genera
             ax.set_xlabel('X Label')
             ax.set_ylabel('Y Label')
             plt.show()
-        
+
         # NOTE: database is defined with 7 time windows
         # FFT power values extracted for three frequency bands (theta, alpha, beta). 
         # Features are arranged in band and electrodes order (theta_1, theta_2..., 
@@ -347,18 +345,20 @@ def load_bashivan_data(data_dir, n_channels = 64, n_windows=7, n_bands=3, genera
         images = np.array(images)
         # transpose
         images = images.transpose((1, 2, 0, 3, 4))
-        scipy.io.savemat(data_dir+'images.mat', mdict={'images': images})
-    
+        scipy.io.savemat(f'{data_dir}images.mat', mdict={'images': images})
+
     else:
         #Load locations in 3D
-        files_mat = scipy.io.loadmat(data_dir+'images.mat', mat_dtype=True)
+        files_mat = scipy.io.loadmat(f'{data_dir}images.mat', mat_dtype=True)
         images = files_mat['images']
-    
+
     #Load info subjects associated with trials. List of patiens for 2670 trials
-    subjects_trials= scipy.io.loadmat(data_dir+'trials_subNums.mat', mat_dtype=True)
+    subjects_trials = scipy.io.loadmat(
+        f'{data_dir}trials_subNums.mat', mat_dtype=True
+    )
     subjNumbers = np.squeeze(subjects_trials['subjectNum'])
-    
-    
+
+
     print("Shape images", images.shape)
-    
+
     return images, labels, subjNumbers

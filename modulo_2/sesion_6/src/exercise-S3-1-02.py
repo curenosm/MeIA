@@ -36,7 +36,7 @@ args = parser.parse_args()
 def test(network_f, network_h, test_loader):
     start_test = True
     with torch.no_grad():
-        for batch_idx, data in enumerate(test_loader):
+        for data in test_loader:
             # get batch data
             samples = data[0].float().cuda()
             labels = data[1].long().cuda()
@@ -81,15 +81,15 @@ def losocv(X, Y, subjects, args):
 
     # variable used to save accuracy results
     list_metrics_clsf = []
-        
+
     # Extract pairs between indexes and subjects
     fold_pairs = get_subject_indices(subjects)
-    
+
     # Iterate over fold_pairs
     for foldNum, fold in enumerate(fold_pairs):
         print('Beginning fold {0} out of {1}'.format(foldNum+1, len(fold_pairs)))
 
-        if foldNum+1 >= 3:# and foldNum+1 <= 11:
+        if foldNum >= 2:# and foldNum+1 <= 11:
             continue
 
         # Divide dataset into training, validation and testing sets
@@ -122,7 +122,7 @@ def losocv(X, Y, subjects, args):
         epoch = 1
         eval_iter = x_src.shape[0] // args.batch_size
 
-        
+
         # [Build Model]
         hidden_size = 128
         network_f = Extractor().cuda()
@@ -211,15 +211,14 @@ def losocv(X, Y, subjects, args):
         print("\n")
         # add to list
         list_metrics_clsf.append([acc, f1, auc, foldNum+1])
-    
+
     # To np array
     list_metrics_clsf = np.array(list_metrics_clsf)
 
     # Save Classification Metrics
-    save_file = args.dir_resume+"/losocv-results.csv"
-    f=open(save_file, 'ab')
-    np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
-    f.close()
+    save_file = f"{args.dir_resume}/losocv-results.csv"
+    with open(save_file, 'ab') as f:
+        np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
 
 
 def main(args):

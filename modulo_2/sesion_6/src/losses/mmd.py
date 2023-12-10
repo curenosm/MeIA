@@ -47,14 +47,17 @@ def _mmd2(K_XX, K_XY, K_YY, const_diagonal=False, biased=False):
     Kt_YY_sum = Kt_YY_sums.sum()                       # e^T * \tilde{K}_YY * e
     K_XY_sum = K_XY_sums_0.sum()                       # e^T * K_{XY} * e
 
-    if biased:
-        mmd2 = ((Kt_XX_sum + sum_diag_X) / (m * m)
+    return (
+        (
+            (Kt_XX_sum + sum_diag_X) / (m * m)
             + (Kt_YY_sum + sum_diag_Y) / (m * m)
-            - 2.0 * K_XY_sum / (m * m))
-    else:
-        mmd2 = (Kt_XX_sum / (m * (m - 1))
+            - 2.0 * K_XY_sum / (m * m)
+        )
+        if biased
+        else (
+            Kt_XX_sum / (m * (m - 1))
             + Kt_YY_sum / (m * (m - 1))
-            - 2.0 * K_XY_sum / (m * m))
-
-    return mmd2
+            - 2.0 * K_XY_sum / (m * m)
+        )
+    )
 

@@ -79,8 +79,6 @@ class Predictor(nn.Module):
         self.fc_out = nn.Linear(input_size, n_classes)
 
     def forward(self, x):
-        out = self.fc_out(x)
-
-        return out
+        return self.fc_out(x)
 
 

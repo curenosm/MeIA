@@ -38,7 +38,7 @@ args = parser.parse_args()
 def test(network_f, network_h, test_loader):
     start_test = True
     with torch.no_grad():
-        for batch_idx, data in enumerate(test_loader):
+        for data in test_loader:
             # get batch data
             samples = data[0].float().cuda()
             labels = data[1].long().cuda()
@@ -83,16 +83,16 @@ def losocv(X, Y, subjects, args):
 
     # variable used to save accuracy results
     list_metrics_clsf = []
-        
+
     # Extract pairs between indexes and subjects
     fold_pairs = get_subject_indices(subjects)
-    
+
     # Iterate over fold_pairs
     for foldNum, fold in enumerate(fold_pairs):
         print('Beginning fold {0} out of {1}'.format(foldNum+1, len(fold_pairs)))
 
         # Only Subjects 1 and 2 are executed
-        if foldNum + 1 >= 3:
+        if foldNum >= 2:
             continue
 
         # Get source and target datasets
@@ -151,6 +151,9 @@ def losocv(X, Y, subjects, args):
         # Almacenar pérdida
         list_loss = []
 
+        # [Total loss]
+        lambda_c = 0.1
+        lambda_v = 0.1
         for iter_num in range(0, args.max_iterations + 1):
             # print(iter_num)
             network_f.train()
@@ -197,9 +200,6 @@ def losocv(X, Y, subjects, args):
             # [virtural adversarial training loss]
             loss_trg_vat = vat_loss(inputs_source, outputs_target)
 
-            # [Total loss]
-            lambda_c = 0.1
-            lambda_v = 0.1
             total_loss = classifier_loss + transfer_loss + lambda_c * ce_loss + lambda_v * loss_trg_vat
 
             # Reset gradients
@@ -234,15 +234,14 @@ def losocv(X, Y, subjects, args):
         print("\n")
         # add to list
         list_metrics_clsf.append([acc, f1, auc, foldNum+1])
-    
+
     # To np array
     list_metrics_clsf = np.array(list_metrics_clsf)
 
     # Save Classification Metrics
-    save_file = args.dir_resume+"/losocv-results.csv"
-    f=open(save_file, 'ab')
-    np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
-    f.close()
+    save_file = f"{args.dir_resume}/losocv-results.csv"
+    with open(save_file, 'ab') as f:
+        np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
 
 
 def main(args):

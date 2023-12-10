@@ -21,19 +21,9 @@ def Semantic(Xs, Xt, Ys, Yt, Cs_memory, Ct_memory, decay=0.3):
         Xt_k = Xt[Yt==k]    # target domain
 
         # validate if there is zero elements in Source domain
-        if len(Xs_k)==0:
-            Cs_k = 0.0
-        else:
-            # get mean from elements of the source domain
-            Cs_k = torch.mean(Xs_k,dim=0)
-
+        Cs_k = 0.0 if len(Xs_k)==0 else torch.mean(Xs_k,dim=0)
         # validate if there is zero elements in Target domain
-        if len(Xt_k) == 0:
-            Ct_k = 0.0
-        else:
-            # get mean from elements of the target domain
-            Ct_k = torch.mean(Xt_k,dim=0)
-
+        Ct_k = 0.0 if len(Xt_k) == 0 else torch.mean(Xt_k,dim=0)
         # Moving average (MA)
         Cs[k, :] = (1 - decay) * Cs_memory[k, :] + decay * Cs_k
         Ct[k, :] = (1 - decay) * Ct_memory[k, :] + decay * Ct_k
