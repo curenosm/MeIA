@@ -34,7 +34,7 @@ args = parser.parse_args()
 def test(model, test_loader):
     start_test = True
     with torch.no_grad():
-        for batch_idx, data in enumerate(test_loader):
+        for data in test_loader:
             # get batch data
             samples = data[0].float().cuda()
             labels = data[1].long().cuda()
@@ -93,8 +93,7 @@ def kfcv(X, Y, subjects, args):
 
         list_metrics_clsf = []
 
-        for i, (train_index, test_index) in enumerate(skf.split(x, y)):
-
+        for train_index, test_index in skf.split(x, y):
             x_train, y_train = x[train_index], y[train_index]
             x_test, y_test = x[test_index], y[test_index]
 
@@ -139,7 +138,7 @@ def kfcv(X, Y, subjects, args):
                 iter_train = iter(source_loader)
                 list_loss = []
 
-                for c in range(len(source_loader)):
+                for _ in range(len(source_loader)):
                     # get batch
                     samples, labels = iter_train.next()
                     samples = samples.float().cuda()
@@ -179,10 +178,9 @@ def kfcv(X, Y, subjects, args):
         list_metrics_clsf = np.array(list_metrics_clsf)
 
         # Save Classification Metrics
-        save_file = args.dir_resume + "/kfcv-results.csv"
-        f = open(save_file, 'ab')
-        np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
-        f.close()
+        save_file = f"{args.dir_resume}/kfcv-results.csv"
+        with open(save_file, 'ab') as f:
+            np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
 
 
 def main(args):

@@ -22,8 +22,7 @@ class VAT(nn.Module):
         self.epsilon = 3.5
 
     def forward(self, x, logit):
-        vat_loss = self.virtual_adversarial_loss(x, logit)
-        return vat_loss
+        return self.virtual_adversarial_loss(x, logit)
 
     def virtual_adversarial_loss(self, x, logit):
         # generate perturbation based on a radius
@@ -33,9 +32,7 @@ class VAT(nn.Module):
         logit_p = logit.detach()  # for backpropagating the gradient
         # get predictions for perturbated samples
         logit_m = self.network_h(self.network_f(x + r_vadv))
-        # apply Kullback Leibler divergence
-        loss = self.kl_divergence(logit_p, logit_m)
-        return loss
+        return self.kl_divergence(logit_p, logit_m)
 
     def generate_virtual_adversarial_perturbation(self, x, logit):
         # generate a gaussian perturbation

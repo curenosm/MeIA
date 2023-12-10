@@ -34,7 +34,7 @@ args = parser.parse_args()
 def test(model, test_loader):
     start_test = True
     with torch.no_grad():
-        for batch_idx, data in enumerate(test_loader):
+        for data in test_loader:
             # get batch data
             samples = data[0].float().cuda()
             labels = data[1].long().cuda()
@@ -79,16 +79,16 @@ def losocv(X, Y, subjects, args):
 
     # variable used to save accuracy results
     list_metrics_clsf = []
-        
+
     # Extract pairs between indexes and subjects
     fold_pairs = get_subject_indices(subjects)
-    
+
     # Iterate over fold_pairs
     for foldNum, fold in enumerate(fold_pairs):
         print('Beginning fold {0} out of {1}'.format(foldNum+1, len(fold_pairs)))
 
         # Only Subjects 1 and 2 are executed
-        if foldNum + 1 >= 3:
+        if foldNum >= 2:
             continue
 
         # Get source and target datasets
@@ -123,13 +123,17 @@ def losocv(X, Y, subjects, args):
 
         # [Build Model]
         source_model = RecResNet(n_classes=4).cuda()
-        source_model.load_state_dict(torch.load("./trained_model/source" + str(foldNum+1) + ".pt"))
+        source_model.load_state_dict(
+            torch.load(f"./trained_model/source{str(foldNum + 1)}.pt")
+        )
         source_model.eval()
         set_requires_grad(source_model, requires_grad=False)
 
         # [Target model]
         target_model = RecResNet(n_classes=4).cuda()
-        target_model.load_state_dict(torch.load("./trained_model/source" + str(foldNum+1) + ".pt"))
+        target_model.load_state_dict(
+            torch.load(f"./trained_model/source{str(foldNum + 1)}.pt")
+        )
 
         # Create adversarial discriminator
         discriminator = nn.Sequential(
@@ -235,15 +239,14 @@ def losocv(X, Y, subjects, args):
         print("\n")
         # add to list
         list_metrics_clsf.append([acc, f1, auc, foldNum+1])
-    
+
     # To np array
     list_metrics_clsf = np.array(list_metrics_clsf)
 
     # Save Classification Metrics
-    save_file = args.dir_resume+"/losocv-results.csv"
-    f=open(save_file, 'ab')
-    np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
-    f.close()
+    save_file = f"{args.dir_resume}/losocv-results.csv"
+    with open(save_file, 'ab') as f:
+        np.savetxt(f, list_metrics_clsf, delimiter=",", fmt='%0.4f')
 
 
 def main(args):
